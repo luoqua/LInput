@@ -5,30 +5,89 @@ function LInput(options) {
 		btn: '#btn',
 		needfields: [
 			{
-				fieldName: 'phone',
+				fieldName: 'QQ',
 				isRequired: true,
-				Regxp: '',
+				Regxp: '^1(3|4|5|7|8)\\d{9}$',
 				err_null_msg: '请填写您的号码',
 				err_rxp_msg: '请填写正确的手机号码'
 			},
 			{
-				fieldName: 'district',
-				isRequired: true,
+				fieldName: 'Contact',
+				isRequired: false,
 				Regxp: '',
 				err_null_msg: '请填写您的装修地址',
 				err_rxp_msg: '请填写正确的装修地址'
+			},
+			{
+				fieldName: 'GuestName',
+				isRequired: false,
+				Regxp: '',
+				err_null_msg: '请填写您的姓名',
+				err_rxp_msg: '请填写正确的姓名'
+			},
+			{
+				fieldName: 'Gender',
+				isRequired: false,
+				Regxp: '',
+				err_null_msg: '请填写您的装修面积',
+				err_rxp_msg: '请填写正确的装修面积'
+			},
+			{
+				fieldName: 'Email',
+				isRequired: false,
+				Regxp: '',
+				err_null_msg: '请完整的选择您的户型',
+				err_rxp_msg: '请填写正确的户型'
+			},
+			{
+				fieldName: 'messageTitle',
+				isRequired: false,
+				Regxp: '',
+				err_null_msg: '请完整的选择您的户型',
+				err_rxp_msg: '请填写正确的户型'
+			},
+			{
+				fieldName: 'messageContent',
+				isRequired: false,
+				Regxp: '',
+				err_null_msg: '请完整的选择您的户型',
+				err_rxp_msg: '请填写正确的户型'
+			},
+			{
+				fieldName: 'Address',
+				isRequired: false,
+				Regxp: '',
+				err_null_msg: '请完整的选择您的户型',
+				err_rxp_msg: '请填写正确的户型'
+			},
+			{
+				fieldName: 'f5',
+				isRequired: false,
+				Regxp: '',
+				err_null_msg: '请完整的选择您的户型',
+				err_rxp_msg: '请填写正确的户型'
 			}
 		],
 		formfields: {
-			phone: 'user_phone',
-			district: 'user_district'
+			Contact:'.user_district',
+          	QQ: '.user_phone',			
+          	GuestName: '.user_name',
+          	Gender: '.user_area',
+          	Email: '.email',
+          	MessageTitle: '.messageTitle',
+          	MessageContent: '.messageContent',
+          	Address: '.address',
+          	f5: '.f5',
+          	hd_flag: '.hd_flag'
 		},
-		hostApi: 'asdasd'
+		hostApi: 'channel/guestbookadd/l/cn',
+		layerFunc: ''
 	}
 	this.configure.inputParam = []
 	// 检验所传配置信息是否符合规范
 	this.options = options
-	Object.assign(this.configure,options && {})
+
+	Object.assign(this.configure,options || {})
 
 	this.checkOptions(options)
 	this.addEvent()
@@ -67,7 +126,7 @@ LInput.prototype.addEvent = function() {
 }
 
 LInput.prototype.handleErr = function(msg) {
-	this.callHook('layer',msg)
+	this.callHook('layerFunc',msg)
 }
 
 // 初始化
@@ -84,32 +143,43 @@ LInput.prototype.selectfields = function() {
 	var queryValue
 	var that = this
 	var promise
+	var selectItem
+	var testFlag = true
 
-	formAction = document.getElementById(this.parent)
+	formAction = document.getElementById(this.configure.parent)
 	if (this.configure.parent === '' || formAction === null) {
 		this.error('please config the parent id or cannot select parent id')
 		return false
 	}
 
 	// 处理选择到的字段，并进行字段验证
-	needfields.forEach(function(item) {
+	needfields.every(function(item) {
 		if (item.isRequired && (formfields[item.fieldName] === null || formfields[item.fieldName] === undefined)) {
 			that.error(` ${item.fieldName}是必须字段`)
 		}
-		queryValue = formAction.querySelector(formfields[item.fieldName]).value
-		if (queryValue === null) {
-			that.handleErr(that.needfields[item.fieldName].err_null_msg)
+		selectItem = formAction.querySelector(formfields[item.fieldName])
+		queryValue = selectItem && selectItem.value
+
+		if (!queryValue) {
+			that.handleErr(item.err_null_msg)
+			testFlag = false
+			return false
 		}
 
-		if (!new RegExp(that.needfields[item.fieldName].Regxp)) {
-			that.handleErr(that.needfields[item.fieldName].err_rxp_msg)
+		if (!new RegExp(item.Regxp).test(queryValue)) {
+			that.handleErr(item.err_rxp_msg)
+			testFlag = false
+			return false
 		}
 
 		selectDom[item.fieldName] = formAction.querySelector(formfields[item.fieldName]).value
+
+		return true
 	})
-	// 处理选择到的字段，并进行字段验证
 
-
+	if (testFlag === false) {
+		return false
+	}
 	promise = this.formsubimit(selectDom)
 	// 数据提交前
 	this.callHook('beforeSubmit')
@@ -163,14 +233,17 @@ LInput.prototype.error = function(message) {
 LInput.prototype.callHook = function(hook,parm) {
 	// 支持传入第三方插件函数,如layer
 	var handler = this.configure[hook]
-	var parmfunc = parm && {}
+	var parmfunc = parm || {}
 
-	if (handler) {
+
+	if (typeof handler === 'function' && handler) { 
 		try {
 			handler.call(this,parmfunc)
 		} catch (e) {
 			console.error('hook')
 		}
+	} else {
+		this.error('hook must be a function')
 	}
 }
 
