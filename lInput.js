@@ -245,8 +245,6 @@ LInput.prototype.callHook = function(hook,parm) {
 		} catch (e) {
 			console.error('hook')
 		}
-	} else {
-		this.error(`hook ${hook}must be a function`)
-	}
+	} 
 }
 
