@@ -69,16 +69,16 @@ function LInput(options) {
 			}
 		],
 		formfields: {
-			Contact:'.user_district',
-          	QQ: '.user_phone',			
-          	GuestName: '.user_name',
-          	Gender: '.user_area',
-          	Email: '.email',
-          	MessageTitle: '.messageTitle',
-          	MessageContent: '.messageContent',
-          	Address: '.address',
-          	f5: '.f5',
-          	hd_flag: '.hd_flag'
+			Contact: '.user_district',
+			QQ: '.user_phone',
+			GuestName: '.user_name',
+			Gender: '.user_area',
+			Email: '.email',
+			MessageTitle: '.messageTitle',
+			MessageContent: '.messageContent',
+			Address: '.address',
+			f5: '.f5',
+			hd_flag: '.hd_flag'
 		},
 		hostApi: 'channel/guestbookadd/l/cn',
 		layerFunc: ''
@@ -154,13 +154,16 @@ LInput.prototype.selectfields = function() {
 
 	// 处理选择到的字段，并进行字段验证
 	needfields.every(function(item) {
+		selectItem = formAction.querySelector(formfields[item.fieldName])
+		if (selectItem === null) {
+			return true
+		}
 		if (item.isRequired && (formfields[item.fieldName] === null || formfields[item.fieldName] === undefined)) {
 			that.error(` ${item.fieldName}是必须字段`)
 		}
-		selectItem = formAction.querySelector(formfields[item.fieldName])
 		queryValue = selectItem && selectItem.value
 
-		if (!queryValue) {
+		if (selectItem !== null && !queryValue) {
 			that.handleErr(item.err_null_msg)
 			testFlag = false
 			return false
@@ -172,7 +175,7 @@ LInput.prototype.selectfields = function() {
 			return false
 		}
 
-		selectDom[item.fieldName] = formAction.querySelector(formfields[item.fieldName]).value
+		selectDom[item.fieldName] = selectItem.value
 
 		return true
 	})
@@ -236,14 +239,14 @@ LInput.prototype.callHook = function(hook,parm) {
 	var parmfunc = parm || {}
 
 
-	if (typeof handler === 'function' && handler) { 
+	if (typeof handler === 'function' && handler) {
 		try {
 			handler.call(this,parmfunc)
 		} catch (e) {
 			console.error('hook')
 		}
 	} else {
-		this.error('hook must be a function')
+		this.error(`hook ${hook}must be a function`)
 	}
 }
 
